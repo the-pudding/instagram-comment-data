@@ -35,7 +35,7 @@ function setup() {
 function getComments({ edges = [], shortcode, id }) {
 	const comments = edges.map(({ node }) => {
 		const { text, created_at, owner } = node;
-		const clean = text.replace(/\n/g, ' ');
+		const clean = text.trim().replace(/\r?\n|\r/g, ' ');
 		return { shortcode, created_at, text: clean, id: owner.id };
 	}).filter(d => d.id !== id);
 
@@ -58,6 +58,7 @@ async function init() {
 	fs.appendFileSync(fileOut, `${d3.csvFormatBody([COLUMNS])}\n`); 
 
 	let i = 0;
+	
 	for await (const post of instaHash) {
 		printProgress(i);
 		const { shortcode, edge_media_to_parent_comment, owner } = post.shortcode_media;
@@ -70,10 +71,12 @@ async function init() {
 				return getComments({ edges: threadEdges, shortcode, id });
 			}).filter(d => d.length);
 			const all = top.concat(...nested);
-			const clean = all.filter(d => d && d !== 'undefined' && d.text);
-			const formatted = d3.csvFormatBody(clean);
-			const chunk = `${formatted}\n`;
-			fs.appendFileSync(fileOut, chunk);
+			const clean = all.filter(d => d && d.text);
+			clean.forEach(c => {
+				const formatted = d3.csvFormatBody([c]);
+				const chunk = `${formatted}\n`;
+				fs.appendFileSync(fileOut, chunk);
+			});
 		}
 		i += 1;
 	}
