@@ -22,7 +22,7 @@ const OPTIONS = {
 	total: 0,
 	headless: true,
 	fullAPI: true,
-	// silent: true,
+	silent: true,
 }
 
 function uploadToS3({ data, id }) {
@@ -57,8 +57,9 @@ async function getPosts({ id, username }) {
 
 	// fs.appendFileSync(fileOut, `${d3.csvFormatBody([COLUMNS])}\n`);
 	const output = [];
-
+	let i = 0;
 	for await (const post of instaHash) {
+		console.log(i);
 		// printProgress(i);
 		const { shortcode, edge_media_to_parent_comment, owner } = post.shortcode_media;
 		const { id } = owner;
@@ -78,6 +79,7 @@ async function getPosts({ id, username }) {
 			// 	fs.appendFileSync(fileOut, chunk);
 			// });
 		}
+		i += 1;
 	}
 
 	uploadToS3({ data: output, id });
@@ -89,7 +91,8 @@ async function init() {
 
 	// const files = fs.readdirSync(PATH_OUT).filter(d => d.includes('.csv'));
 	// const offset = files.length;
-	const offset = 53;
+	// did 53
+	const offset = 54;
 	const subsetUsers = USER_DATA.slice(offset); 
 
 	for (s of subsetUsers) {
