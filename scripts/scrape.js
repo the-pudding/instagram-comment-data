@@ -13,7 +13,7 @@ const AWS_SECRET = process.env.AWS_SECRET;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
 
-const TIMEOUT = 800000;
+const TIMEOUT = 1200000;
 
 const client = knox.createClient({
 	key: AWS_KEY,
@@ -29,18 +29,24 @@ const OPTIONS = {
 }
 
 function uploadToS3({ data, id }) {
-	// const string = JSON.stringify({ data, updated });
-	const string = d3.csvFormat(data);
-	const req = client.put(`${PUDDING_PATH}/${id}.csv`, {
-		'Content-Length': Buffer.byteLength(string),
-		'Content-Type': 'text/csv'
-	});
+	return new Promise((resolve, reject) => {
+		// const string = JSON.stringify({ data, updated });
+		const string = d3.csvFormat(data);
+		const req = client.put(`${PUDDING_PATH}/${id}.csv`, {
+			'Content-Length': Buffer.byteLength(string),
+			'Content-Type': 'text/csv'
+		});
 
-	req.on('response', res => {
-		if (res.statusCode === 200) console.log('saved to %s', req.url);
-	});
+		req.on('response', res => {
+			if (res.statusCode === 200) {
+				console.log('saved to %s', req.url);
+				resolve();
+			}
+			else reject(id);
+		});
 
-	req.end(string);
+		req.end(string);
+	});
 }
 
 function getComments({ edges = [], shortcode, id }) {
@@ -54,13 +60,13 @@ function getComments({ edges = [], shortcode, id }) {
 	return comments;
 }
 
-async function getPosts({ id, username }) {
+async function getPosts({ id, username, media_count }) {
 	console.log(`starting scrape for ${id}...`);
 	return new Promise(async (resolve, reject) => {
 		let aborted = false;
 		const timer = setTimeout(() => {
 			aborted = true;
-			reject(`unable to finish ${id}`);
+			reject(id);
 		}, TIMEOUT);
 
 		// const fileOut = `${PATH_OUT}/${id}.csv`;
@@ -69,7 +75,18 @@ async function getPosts({ id, username }) {
 		// fs.appendFileSync(fileOut, `${d3.csvFormatBody([COLUMNS])}\n`);
 		const output = [];
 		let i = 0;
+		let half = false;
+		let full = false;
 		for await (const post of instaHash) {
+			const p = i / +media_count;
+			if (p > 0.5 && !half) {
+				console.log('50%');
+				half = true;
+			}
+			else if (p >= 1 && !full) {
+				console.log('100%');
+				full = true;
+			}
 			// if (i % 100 === 0) console.log(i);
 			// printProgress(i);
 			const { shortcode, edge_media_to_parent_comment, owner } = post.shortcode_media;
@@ -88,9 +105,8 @@ async function getPosts({ id, username }) {
 			i += 1;
 		}
 		if (!aborted) {
-			uploadToS3({ data: output, id });
 			clearTimeout(timer);
-			resolve();
+			uploadToS3({ data: output, id }).then(resolve).catch(reject);
 		}
 	});
 }
@@ -100,27 +116,50 @@ function checkExists({ id }) {
 		const url = `https://pudding-data-processing.s3.amazonaws.com/instagram-comments/${id}.csv`;
 		request(url, (err, resp) => {
 			if (err) reject();
-			else resolve(resp.statusCode === 200)
+			else resolve(resp.statusCode === 200);
 		})
-	})
-	
+	});
 }
+
+function redo(id) {
+	return new Promise((resolve, reject) => {
+		const url = `https://pudding-data-processing.s3.amazonaws.com/instagram-comments/redo.csv`;
+		request(url, (err, resp, body) => {
+			if (err) reject();
+			else if (resp.statusCode === 200) {
+				data = d3.csvParse(body);
+				data.push({ id });
+				uploadToS3({ data, id: 'redo' }).then(resolve).catch(reject);
+			}
+		});
+	});
+}
+
+function delay(dur) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, dur);
+	});
+}
+
 async function init() {
 	mkdirp(PATH_OUT);
 
 	// const files = fs.readdirSync(PATH_OUT).filter(d => d.includes('.csv'));
 	// const offset = files.length;
 	// did 53
-	const offset = 60;
-	const subsetUsers = USER_DATA.slice(offset);
+	// const start = USER_DATA.findIndex(d => d.id === '499128');
+	// const offset = 63;
+	// const subsetUsers = USER_DATA.slice(offset);
 
-	for (s of subsetUsers) {
+	for (s of USER_DATA) {
+		console.log(s.id);
 		const exists = await checkExists(s);
 		if (!exists) {
 			try {
 				await getPosts(s);
-			} catch (err) {
-				console.log(err);
+			} catch (id) {
+				await redo(id);
+				await delay(20000);
 			}
 		}
 	}
