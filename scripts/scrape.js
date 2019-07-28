@@ -124,14 +124,20 @@ function checkExists({ id }) {
 function redo(id) {
 	return new Promise((resolve, reject) => {
 		const url = `https://pudding-data-processing.s3.amazonaws.com/instagram-comments/redo.csv`;
-		request(url, (err, resp, body) => {
-			if (err) reject();
-			else if (resp.statusCode === 200) {
+		const r = request(url);
+		r.on('response', response => {
+			r.abort();
+			let data = null;
+			if (response.statusCode === 200) {
 				data = d3.csvParse(body);
-				data.push({ id });
-				uploadToS3({ data, id: 'redo' }).then(resolve).catch(reject);
+				data.push({ id });	
+			} else {
+				data = [{ id }];
 			}
+			uploadToS3({ data, id: 'redo' }).then(resolve).catch(reject);
 		});
+
+		r.on('error', reject);
 	});
 }
 
