@@ -5,7 +5,7 @@ const mkdirp = require('mkdirp');
 const knox = require('knox');
 const request = require('request');
 
-const USER_DATA = d3.csvParse(fs.readFileSync('./input/users--1-5000.csv', 'utf8'));
+const USER_DATA = d3.csvParse(fs.readFileSync('./output/users.csv', 'utf8'));
 const PATH_OUT = './output/user-comments';
 
 const AWS_KEY = process.env.AWS_KEY;
@@ -64,13 +64,16 @@ async function getPosts({ id, username, media_count }) {
 	console.log(`starting scrape for ${id}...`);
 	return new Promise(async (resolve, reject) => {
 		let aborted = false;
+		let instaHash = Instamancer.user(username, OPTIONS);
+
 		const timer = setTimeout(() => {
 			aborted = true;
+			instaHash = null;
 			reject(id);
 		}, TIMEOUT);
 
 		// const fileOut = `${PATH_OUT}/${id}.csv`;
-		const instaHash = Instamancer.user(username, OPTIONS);
+		
 
 		// fs.appendFileSync(fileOut, `${d3.csvFormatBody([COLUMNS])}\n`);
 		const output = [];
@@ -103,6 +106,11 @@ async function getPosts({ id, username, media_count }) {
 				output.push(...clean);
 			}
 			i += 1;
+			if (i > 2000) {
+				aborted = true;
+				instaHash = null;
+				reject(id);
+			}
 		}
 		if (!aborted) {
 			clearTimeout(timer);
