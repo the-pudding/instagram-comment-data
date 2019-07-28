@@ -13,7 +13,7 @@ const AWS_SECRET = process.env.AWS_SECRET;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
 
-const TIMEOUT = 80000;
+const TIMEOUT = 800000;
 
 const client = knox.createClient({
 	key: AWS_KEY,
@@ -55,8 +55,13 @@ function getComments({ edges = [], shortcode, id }) {
 }
 
 async function getPosts({ id, username }) {
+	console.log(`starting scrape for ${id}...`);
 	return new Promise(async (resolve, reject) => {
-		const timer = setTimeout(() => reject(`unable to finish ${id}`), TIMEOUT);
+		let aborted = false;
+		const timer = setTimeout(() => {
+			aborted = true;
+			reject(`unable to finish ${id}`);
+		}, TIMEOUT);
 
 		// const fileOut = `${PATH_OUT}/${id}.csv`;
 		const instaHash = Instamancer.user(username, OPTIONS);
@@ -65,7 +70,7 @@ async function getPosts({ id, username }) {
 		const output = [];
 		let i = 0;
 		for await (const post of instaHash) {
-			// console.log(i);
+			// if (i % 100 === 0) console.log(i);
 			// printProgress(i);
 			const { shortcode, edge_media_to_parent_comment, owner } = post.shortcode_media;
 			const { id } = owner;
@@ -79,15 +84,12 @@ async function getPosts({ id, username }) {
 				const all = top.concat(...nested);
 				const clean = all.filter(d => d && d.text);
 				output.push(...clean);
-				// clean.forEach(c => {
-				// 	const formatted = d3.csvFormatBody([c]);
-				// 	const chunk = `${formatted}\n`;
-				// 	fs.appendFileSync(fileOut, chunk);
-				// });
 			}
 			i += 1;
+		}
+		if (!aborted) {
 			uploadToS3({ data: output, id });
-			cancelTimeout(timer);
+			clearTimeout(timer);
 			resolve();
 		}
 	});
@@ -113,7 +115,7 @@ async function init() {
 	const subsetUsers = USER_DATA.slice(offset);
 
 	for (s of subsetUsers) {
-		const exists = checkExists(s);
+		const exists = await checkExists(s);
 		if (!exists) {
 			try {
 				await getPosts(s);
