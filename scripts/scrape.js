@@ -61,7 +61,7 @@ function getComments({ edges = [], shortcode, id }) {
 }
 
 async function getPosts({ id, username, media_count }) {
-	console.log(`starting scrape for ${id}...`);
+	console.log(`starting scrape for ${id}: ${media_count} posts`);
 	return new Promise(async (resolve, reject) => {
 		let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
