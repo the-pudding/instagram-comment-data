@@ -13,7 +13,7 @@ const AWS_SECRET = process.env.AWS_SECRET;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
 
-const TIMEOUT = 1200000;
+// const TIMEOUT = 1200000;
 
 const client = knox.createClient({
 	key: AWS_KEY,
@@ -25,7 +25,7 @@ const OPTIONS = {
 	total: 0,
 	headless: true,
 	fullAPI: true,
-	silent: true,
+	silent: false,
 }
 
 function uploadToS3({ data, id }) {
@@ -63,14 +63,14 @@ function getComments({ edges = [], shortcode, id }) {
 async function getPosts({ id, username, media_count }) {
 	console.log(`starting scrape for ${id}: ${media_count} posts`);
 	return new Promise(async (resolve, reject) => {
-		let aborted = false;
+		// let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
 
-		const timer = setTimeout(() => {
-			aborted = true;
-			instaHash = null;
-			reject(id);
-		}, TIMEOUT);
+		// const timer = setTimeout(() => {
+		// 	aborted = true;
+		// 	instaHash = null;
+		// 	reject(id);
+		// }, TIMEOUT);
 
 		// const fileOut = `${PATH_OUT}/${id}.csv`;
 		
@@ -106,16 +106,16 @@ async function getPosts({ id, username, media_count }) {
 				output.push(...clean);
 			}
 			i += 1;
-			if (i > 2000) {
-				aborted = true;
-				instaHash = null;
-				reject(id);
-			}
+			// if (i > 2000) {
+			// 	aborted = true;
+			// 	instaHash = null;
+			// 	reject(id);
+			// }
 		}
-		if (!aborted) {
-			clearTimeout(timer);
+		// if (!aborted) {
+			// clearTimeout(timer);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
-		}
+		// }
 	});
 }
 
