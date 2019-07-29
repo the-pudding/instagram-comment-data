@@ -165,7 +165,7 @@ async function init() {
 	// const offset = 63;
 	// const subsetUsers = USER_DATA.slice(offset);
 
-	for (s of USER_DATA) {
+	for (s of USER_DATA.filter(d => +d.media_count < 1200)) {
 		console.log(s.id);
 		const exists = await checkExists(s);
 		if (!exists) {
