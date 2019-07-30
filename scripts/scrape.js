@@ -26,6 +26,7 @@ const OPTIONS = {
 	headless: true,
 	fullAPI: true,
 	silent: false,
+	sleepTime: 3,
 }
 
 function uploadToS3({ data, id }) {
