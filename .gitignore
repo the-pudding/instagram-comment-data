@@ -1,4 +1,6 @@
 .DS_Store
 node_modules
 output/user-comments
+output/s3/*.csv
+output/sample*
 .env

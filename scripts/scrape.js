@@ -115,6 +115,7 @@ async function getPosts({ id, username, media_count }) {
 		}
 		// if (!aborted) {
 			// clearTimeout(timer);
+			console.log(`comment count for ${id}: ${output.length}`);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
 		// }
 	});
