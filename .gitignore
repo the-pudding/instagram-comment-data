@@ -3,4 +3,5 @@ node_modules
 output/user-comments
 output/s3/*.csv
 output/sample*
+output/bin/*.csv
 .env

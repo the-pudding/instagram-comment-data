@@ -167,7 +167,9 @@ async function init() {
 	// const offset = 63;
 	// const subsetUsers = USER_DATA.slice(offset);
 
-	for (s of USER_DATA.filter(d => +d.media_count < 1200)) {
+	const blacklist = ['jessrice13'];
+
+	for (s of USER_DATA.filter(d => +d.media_count < 1200 && !blacklist.includes(d.username))) {
 		console.log(s.id);
 		const exists = await checkExists(s);
 		if (!exists) {

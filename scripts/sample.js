@@ -3,6 +3,8 @@ const d3 = require('d3');
 const shell = require('shelljs');
 const rimraf = require('rimraf');
 const mkdirp = require('mkdirp');
+const franc = require('franc-min');
+
 
 const RATE = 0.25; // 25% of smallest half-year comments
 const PATH_IN = './output/s3';
@@ -10,6 +12,16 @@ const PATH_OUT = './output/bin';
 
 const writers = {};
 const counts = {};
+
+function isEnglishish(text) {
+	const langs = franc.all(text, { minLength: 10 });
+	const eng = langs.find(d => d[0] === 'eng');
+	const engIndex = langs.findIndex(d => d[0] === 'eng');
+	// const und = langs.find(d => d[0] === 'und');
+	const undIndex = langs.findIndex(d => d[0] === 'und');
+	const use = (engIndex > -1 && eng[1] > 0.2) || undIndex > -1;
+	return use;
+}
 
 function getWriter(bin) {
 	if (!writers[bin]) {
@@ -23,7 +35,9 @@ function getWriter(bin) {
 
 function binComments(file) {
 	const data = d3.csvParse(fs.readFileSync(`${PATH_IN}/${file}`, 'utf8'));
-	for (d of data) {
+	const filtered = data.filter(d => isEnglishish(d.text));
+
+	for (d of filtered) {
 		const date = new Date(+d.created_at * 1000);
 		const year = date.getFullYear();
 		const month = d3.format('02')(Math.floor(date.getMonth() / 6));
@@ -80,8 +94,8 @@ async function init() {
 		let [ year, group ] = d.bin.split('-');
 		year = +year;
 		group = +group;
-		// 2011 - 01 (second half of year)
-		return year + group > 2011;
+		// 2012 - 01 (second half of year)
+		return year + group > 2012;
 	});
 
 	const sampleSize = Math.floor(d3.min(countMap, d => d.count) * RATE);
@@ -90,3 +104,33 @@ async function init() {
 }
 
 init();
+
+// const data = d3.csvParse(fs.readFileSync('./output/sample--1564609230656.csv', 'utf8'));
+
+// const data = [
+// 	{text: 'ha'},
+// 	{ text: 'haha' },
+// 	{ text: 'hahahahaha' },
+// 	{ text: 'lol' },
+// 	{ text: 'lolll' },
+// 	{ text: 'rofl omg' },
+// ];
+
+// const lang = data.slice(0, 100).map(d => {
+// 	const langs = franc.all(d.text, { minLength: 5 });
+// 	const eng = langs.find(d => d[0] === 'eng');
+// 	const engIndex = langs.findIndex(d => d[0] === 'eng');
+// 	const und = langs.find(d => d[0] === 'und');
+// 	const undIndex = langs.findIndex(d => d[0] === 'und');
+// 	console.log(d.text);
+// 	const use = (engIndex < 20 && engIndex > -1) || undIndex > -1;
+// 	console.log(use);
+// 	// console.log(langs.slice(0, 10));
+// 	console.log('-------------\n')
+// 	// return {
+// 	// 	...d,
+// 	// }	
+	
+// });
+
+// fs.writeFileSync('./output/lang.csv', d3.csvFormat(lang));
