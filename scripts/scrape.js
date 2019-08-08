@@ -76,13 +76,12 @@ async function getPosts({ id, username, media_count }) {
 
 		const output = [];
 		let i = 0;
-		const incs = d3.range(0.05, 1.05, 0.05);
-		for await (const post of instaHash) {
+		const t = setInterval(() => {
 			const p = i / +media_count;
-			if (p > incs[0]) {
-				console.log(d3.format('%')(incs[0]));
-				incs.shift();
-			}
+			console.log(d3.format('.1%')(p), `${i} of ${media_count}`);
+		}, 30000);
+
+		for await (const post of instaHash) {
 			// if (i % 100 === 0) console.log(i);
 			// printProgress(i);
 			const { shortcode, edge_media_to_parent_comment, owner } = post.shortcode_media;
@@ -102,6 +101,7 @@ async function getPosts({ id, username, media_count }) {
 		}
 		// if (!aborted) {
 			// clearTimeout(t);
+			clearInterval(t);
 			console.log(`comment count for ${id}: ${output.length}`);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
 		// }
