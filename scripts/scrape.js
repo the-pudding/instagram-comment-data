@@ -12,6 +12,7 @@ const AWS_KEY = process.env.AWS_KEY;
 const AWS_SECRET = process.env.AWS_SECRET;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
+const LOCAL = process.env.LOCAL === 'true';
 
 // const TIMEOUT = 1200000;
 
@@ -122,9 +123,13 @@ async function getPosts({ id, username, media_count }) {
 }
 
 function checkExists({ id }) {
+	console.log(`checking for ${id}`);
 	return new Promise((resolve, reject) => {
+		const t = setTimeout(reject, 5000);
 		const url = `https://pudding-data-processing.s3.amazonaws.com/instagram-comments/${id}.csv`;
 		request(url, (err, resp) => {
+			console.log(resp.statusCode);
+			clearTimeout(t);
 			if (err) reject();
 			else resolve(resp.statusCode === 200);
 		})
@@ -160,17 +165,14 @@ function delay(dur) {
 async function init() {
 	mkdirp(PATH_OUT);
 
-	// const files = fs.readdirSync(PATH_OUT).filter(d => d.includes('.csv'));
-	// const offset = files.length;
-	// did 53
-	// const start = USER_DATA.findIndex(d => d.id === '499128');
-	// const offset = 63;
-	// const subsetUsers = USER_DATA.slice(offset);
-
 	const blacklist = ['jessrice13'];
 
+	if (LOCAL) {
+		console.log('flip');
+		USER_DATA.reverse();
+	}
+
 	for (s of USER_DATA.filter(d => +d.media_count < 1200 && !blacklist.includes(d.username))) {
-		console.log(s.id);
 		const exists = await checkExists(s);
 		if (!exists) {
 			try {
