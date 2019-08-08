@@ -176,7 +176,7 @@ async function init() {
 			try {
 				await getPosts(s);
 			} catch (id) {
-				await redo(id);
+				// await redo(id);
 				await delay(20000);
 			}
 		}
