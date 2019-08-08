@@ -81,7 +81,7 @@ async function getPosts({ id, username, media_count }) {
 			const p = i / +media_count;
 			if (p > incs[0]) {
 				console.log(d3.format('%')(incs[0]));
-				incs.unshift();
+				incs.shift();
 			}
 			// if (i % 100 === 0) console.log(i);
 			// printProgress(i);
