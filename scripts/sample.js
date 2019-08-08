@@ -99,6 +99,7 @@ async function init() {
 	});
 
 	const sampleSize = Math.floor(d3.min(countMap, d => d.count) * RATE);
+	console.log({ sampleSize });
 	const results = await pluck({ bins: countMap, sampleSize });
 	fs.writeFileSync(`./output/sample--${Date.now()}.csv`, d3.csvFormat(results));
 }

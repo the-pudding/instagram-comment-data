@@ -1,1 +1,1 @@
-worker: node scripts/scrape.js
+worker: node --max-old-space-size=8192 scripts/scrape.js

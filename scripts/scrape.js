@@ -178,8 +178,9 @@ async function init() {
 			try {
 				await getPosts(s);
 			} catch (id) {
+				process.exit(1);
 				// await redo(id);
-				await delay(20000);
+				// await delay(20000);
 			}
 		}
 	}
