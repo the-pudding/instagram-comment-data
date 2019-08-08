@@ -26,7 +26,7 @@ const OPTIONS = {
 	total: 0,
 	headless: true,
 	fullAPI: true,
-	silent: false,
+	silent: true,
 	sleepTime: 3,
 }
 
@@ -67,12 +67,12 @@ async function getPosts({ id, username, media_count }) {
 	return new Promise(async (resolve, reject) => {
 		// let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
-
-		// const timer = setTimeout(() => {
-		// 	aborted = true;
-		// 	instaHash = null;
-		// 	reject(id);
-		// }, TIMEOUT);
+		
+		const t = setTimeout(() => {
+			aborted = true;
+			instaHash = null;
+			reject(id);
+		}, +media_count * 2000);
 
 		// const fileOut = `${PATH_OUT}/${id}.csv`;
 		
@@ -114,11 +114,11 @@ async function getPosts({ id, username, media_count }) {
 			// 	reject(id);
 			// }
 		}
-		// if (!aborted) {
-			// clearTimeout(timer);
+		if (!aborted) {
+			clearTimeout(t);
 			console.log(`comment count for ${id}: ${output.length}`);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
-		// }
+		}
 	});
 }
 
