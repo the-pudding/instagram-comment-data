@@ -123,12 +123,11 @@ async function getPosts({ id, username, media_count }) {
 }
 
 function checkExists({ id }) {
-	console.log(`checking for ${id}`);
 	return new Promise((resolve, reject) => {
 		const t = setTimeout(reject, 5000);
 		const url = `https://pudding-data-processing.s3.amazonaws.com/instagram-comments/${id}.csv`;
 		request(url, (err, resp) => {
-			console.log(resp.statusCode);
+			console.log(id, resp.statusCode);
 			clearTimeout(t);
 			if (err) reject();
 			else resolve(resp.statusCode === 200);
