@@ -142,7 +142,7 @@ function redo(id) {
 			r.abort();
 			let data = null;
 			if (response.statusCode === 200) {
-				data = d3.csvParse(body);
+				data = d3.csvParse(response.body);
 				data.push({ id });	
 			} else {
 				data = [{ id }];
