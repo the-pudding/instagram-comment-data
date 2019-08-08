@@ -80,11 +80,10 @@ async function getPosts({ id, username, media_count }) {
 		let stuckCount = 0;
 		const t = setInterval(() => {
 			const p = i / +media_count;
-			if (p !== prevP) {
-				stuckCount = 0;
-			} else {
-				stuckCount += 1;
-			}
+			
+			if (p !== prevP) stuckCount = 0;
+			else stuckCount += 1;
+
 			if (stuckCount >= 20) {
 				clearInterval(t);
 				aborted = true;
