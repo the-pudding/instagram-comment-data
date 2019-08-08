@@ -76,17 +76,12 @@ async function getPosts({ id, username, media_count }) {
 
 		const output = [];
 		let i = 0;
-		let half = false;
-		let full = false;
+		const incs = d3.range(0.05, 1.05, 0.05);
 		for await (const post of instaHash) {
 			const p = i / +media_count;
-			if (p > 0.5 && !half) {
-				console.log('50%');
-				half = true;
-			}
-			else if (p >= 1 && !full) {
-				console.log('100%');
-				full = true;
+			if (p > incs[0]) {
+				console.log(d3.format('%')(incs[0]));
+				incs.unshift();
 			}
 			// if (i % 100 === 0) console.log(i);
 			// printProgress(i);
