@@ -14,7 +14,7 @@ const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
 const LOCAL = process.env.LOCAL === 'true';
 
-// const TIMEOUT = 1200000;
+let zeroStreak = 0;
 
 const client = knox.createClient({
 	key: AWS_KEY,
@@ -118,6 +118,12 @@ async function getPosts({ id, username, media_count }) {
 			// clearTimeout(t);
 			clearInterval(t);
 			console.log(`comment count for ${id}: ${output.length}`);
+			if (output.length === 0) zeroStreak += 1;
+			else zeroStreak = 0;
+			if (zeroStreak > 2) {
+				console.log('zeroStreak');
+				process.exit(1);
+			}
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
 		}
 	});
