@@ -65,7 +65,7 @@ function getComments({ edges = [], shortcode, id }) {
 async function getPosts({ id, username, media_count }) {
 	console.log(`starting scrape for ${id}: ${media_count} posts`);
 	return new Promise(async (resolve, reject) => {
-		// let aborted = false;
+		let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
 		
 		// const t = setTimeout(() => {
@@ -76,8 +76,22 @@ async function getPosts({ id, username, media_count }) {
 
 		const output = [];
 		let i = 0;
+		let prevP = 0;
+		let stuckCount = 0;
 		const t = setInterval(() => {
 			const p = i / +media_count;
+			if (p !== prevP) {
+				stuckCount = 0;
+			} else {
+				stuckCount += 1;
+			}
+			if (stuckCount >= 20) {
+				clearInterval(t);
+				aborted = true;
+				instaHash = null;
+				console.log(`aborting ${id}`);
+				reject(id);
+			}
 			console.log(d3.format('.1%')(p), `${i} of ${media_count}`);
 		}, 30000);
 
@@ -99,12 +113,12 @@ async function getPosts({ id, username, media_count }) {
 			}
 			i += 1;
 		}
-		// if (!aborted) {
+		if (!aborted) {
 			// clearTimeout(t);
 			clearInterval(t);
 			console.log(`comment count for ${id}: ${output.length}`);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
-		// }
+		}
 	});
 }
 
