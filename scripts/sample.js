@@ -6,7 +6,7 @@ const mkdirp = require('mkdirp');
 const franc = require('franc-min');
 
 
-const RATE = 0.25; // 25% of smallest half-year comments
+const RATE = 0.25; // 25% of smallest half-year comments, would like it down to 5%
 const PATH_IN = './output/s3';
 const PATH_OUT = './output/bin';
 

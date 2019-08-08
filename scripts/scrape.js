@@ -68,16 +68,12 @@ async function getPosts({ id, username, media_count }) {
 		// let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
 		
-		const t = setTimeout(() => {
-			aborted = true;
-			instaHash = null;
-			reject(id);
-		}, +media_count * 2000);
+		// const t = setTimeout(() => {
+		// 	aborted = true;
+		// 	instaHash = null;
+		// 	reject(id);
+		// }, +media_count * 2000);
 
-		// const fileOut = `${PATH_OUT}/${id}.csv`;
-		
-
-		// fs.appendFileSync(fileOut, `${d3.csvFormatBody([COLUMNS])}\n`);
 		const output = [];
 		let i = 0;
 		let half = false;
@@ -108,17 +104,12 @@ async function getPosts({ id, username, media_count }) {
 				output.push(...clean);
 			}
 			i += 1;
-			// if (i > 2000) {
-			// 	aborted = true;
-			// 	instaHash = null;
-			// 	reject(id);
-			// }
 		}
-		if (!aborted) {
-			clearTimeout(t);
+		// if (!aborted) {
+			// clearTimeout(t);
 			console.log(`comment count for ${id}: ${output.length}`);
 			uploadToS3({ data: output, id }).then(resolve).catch(reject);
-		}
+		// }
 	});
 }
 
