@@ -5,7 +5,7 @@ const mkdirp = require('mkdirp');
 const knox = require('knox');
 const request = require('request');
 
-const USER_DATA = d3.csvParse(fs.readFileSync(`./input/output/users-${VERSION}.csv`, 'utf8'));
+const USER_DATA = d3.csvParse(fs.readFileSync(`./input/users-${process.env.VERSION}.csv`, 'utf8'));
 const PATH_OUT = './output/user-comments';
 
 const AWS_KEY = process.env.AWS_KEY;
