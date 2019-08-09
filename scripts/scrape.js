@@ -92,12 +92,12 @@ async function getPosts({ id, username, media_count }) {
 				instaHash = null;
 				console.log(`aborting ${id}`);
 				reject(id);
-			} else if ( p >= 1.05) wrap();
+			} else if ( p >= 1.05) wrap(true);
 
 			console.log(d3.format('.1%')(p), `${i} of ${media_count}`);
 		}, 30000);
 
-		const wrap = () => {
+		const wrap = (rej) => {
 			clearInterval(t);
 			console.log(`comment count for ${id}: ${output.length}`);
 			if (output.length === 0) zeroStreak += 1;
@@ -106,7 +106,8 @@ async function getPosts({ id, username, media_count }) {
 				console.log('zeroStreak');
 				process.exit(1);
 			}
-			uploadToS3({ data: output, id }).then(resolve).catch(reject);
+			const cb = rej ? reject : resolve; 
+			uploadToS3({ data: output, id }).then(cb).catch(reject);
 		}
 
 		for await (const post of instaHash) {
@@ -185,7 +186,7 @@ function delay(dur) {
 async function init() {
 	mkdirp(PATH_OUT);
 
-	const blacklist = ['jessrice13'];
+	const blacklist = ['jessrice13', 'dv5tin'];
 
 	if (LOCAL) {
 		console.log('flip');
