@@ -92,9 +92,22 @@ async function getPosts({ id, username, media_count }) {
 				instaHash = null;
 				console.log(`aborting ${id}`);
 				reject(id);
-			}
+			} else if ( p >= 1.05) wrap();
+
 			console.log(d3.format('.1%')(p), `${i} of ${media_count}`);
 		}, 30000);
+
+		const wrap = () => {
+			clearInterval(t);
+			console.log(`comment count for ${id}: ${output.length}`);
+			if (output.length === 0) zeroStreak += 1;
+			else zeroStreak = 0;
+			if (zeroStreak > 2) {
+				console.log('zeroStreak');
+				process.exit(1);
+			}
+			uploadToS3({ data: output, id }).then(resolve).catch(reject);
+		}
 
 		for await (const post of instaHash) {
 			// if (i % 100 === 0) console.log(i);
@@ -114,6 +127,7 @@ async function getPosts({ id, username, media_count }) {
 			}
 			i += 1;
 		}
+
 		if (!aborted) {
 			// clearTimeout(t);
 			clearInterval(t);
