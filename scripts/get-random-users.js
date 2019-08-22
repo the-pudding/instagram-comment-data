@@ -4,7 +4,7 @@ const request = require('request');
 const mkdirp = require('mkdirp');
 
 const NUM_USERS = 10000;
-const MAX_ID = 9999999;
+const MAX_ID = 999999;
 const MIN_MEDIA = 50;
 const MAX_MEDIA = 2000;
 
@@ -32,9 +32,10 @@ async function getRandomUser(id) {
 	try {
 		await delay(delayVal);
 		const { user } = await getUserData(id);
-		const { username, is_private, media_count, is_business } = user;
-		if (username && !is_private && !is_business && media_count > MIN_MEDIA && media_count < MAX_MEDIA ) return Promise.resolve({ id, username, media_count });
-		else return Promise.reject({ id });
+		const { username } = user;
+		// if (username && !is_private && !is_business && media_count > MIN_MEDIA && media_count < MAX_MEDIA ) return Promise.resolve({ id, username, media_count });
+		return Promise.resolve({ id, username });
+		// else return Promise.reject({ id });
 	} catch (err) {
 		console.log({ err });
 		if (err === 429) delayVal = 600000;
@@ -56,7 +57,7 @@ function loadFiles({fileUsers, fileNon}) {
 
 	if (existsU && existsN) return { users, non };
 
-	const COLUMNS = ['id', 'username', 'media_count'];
+	const COLUMNS = ['id', 'username'];
 	fs.appendFileSync(fileUsers, `${d3.csvFormatBody([COLUMNS])}\n`); 
 
 	const COLUMNS2 = ['id'];
@@ -67,8 +68,8 @@ function loadFiles({fileUsers, fileNon}) {
 
 async function init() {
 	mkdirp('./output');
-	const fileUsers = './output/users.csv';
-	const fileNon = './output/invalid.csv';
+	const fileUsers = './output/users-v2.csv';
+	const fileNon = './output/invalid-v2.csv';
 
 	const { users, non } = loadFiles({ fileUsers, fileNon });
 	

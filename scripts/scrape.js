@@ -5,7 +5,7 @@ const mkdirp = require('mkdirp');
 const knox = require('knox');
 const request = require('request');
 
-const USER_DATA = d3.csvParse(fs.readFileSync(`./input/users-${process.env.VERSION}.csv`, 'utf8'));
+const USER_DATA = d3.csvParse(fs.readFileSync(`./output/users-v2.csv`, 'utf8'));
 const PATH_OUT = './output/user-comments';
 
 const AWS_KEY = process.env.AWS_KEY;
@@ -13,6 +13,9 @@ const AWS_SECRET = process.env.AWS_SECRET;
 const AWS_BUCKET = process.env.AWS_BUCKET;
 const PUDDING_PATH = 'instagram-comments';
 const LOCAL = process.env.LOCAL === 'true';
+
+const NOW = Date.now();
+const YEAR = 31536000000;
 
 let zeroStreak = 0;
 
@@ -62,8 +65,8 @@ function getComments({ edges = [], shortcode, id }) {
 	return comments;
 }
 
-async function getPosts({ id, username, media_count }) {
-	console.log(`starting scrape for ${id}: ${media_count} posts`);
+async function getPosts({ id, username }) {
+	console.log(`starting scrape for ${id}`);
 	return new Promise(async (resolve, reject) => {
 		let aborted = false;
 		let instaHash = Instamancer.user(username, OPTIONS);
@@ -79,8 +82,8 @@ async function getPosts({ id, username, media_count }) {
 		let prevI = 0;
 		let stuckCount = 0;
 		const t = setInterval(() => {
-			const p = i / +media_count;
-			
+			const years = output.length ? (NOW - output[output.length - 1].created_at * 1000) / YEAR : 0;
+			console.log({ years })
 			if (i !== prevI) {
 				stuckCount = 0;
 				prevI = i;
@@ -92,9 +95,11 @@ async function getPosts({ id, username, media_count }) {
 				instaHash = null;
 				console.log(`aborting ${id}`);
 				reject(id);
-			} else if ( p >= 1.05) wrap(true);
+			} else if (i >= 1200) wrap(true);
+			else if (years >= 7) wrap(true)
+			else if (stuckCount === 3 && output.length === 0) wrap(true);
 
-			console.log(d3.format('.1%')(p), `${i} of ${media_count}`);
+			console.log(`${output.length} comments`);
 		}, 30000);
 
 		const wrap = (rej) => {
@@ -193,7 +198,7 @@ async function init() {
 		USER_DATA.reverse();
 	}
 
-	for (s of USER_DATA.filter(d => +d.media_count < 1200 && !blacklist.includes(d.username))) {
+	for (s of USER_DATA.filter(d => !blacklist.includes(d.username))) {
 		const exists = await checkExists(s);
 		if (!exists) {
 			try {
